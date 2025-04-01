@@ -1,0 +1,34 @@
+# 忽略所有名为node_modules的文件夹
+ddpm-butterflies-128/
+auv_tracking_diffusion_policy/
+__pycache__/
+# 忽略所有以.log结尾的日志文件
+*.log
+*.png
+*.pyc
+# 忽略所有.DS_Store文件
+.DS_Store
+
+# 忽略所有以tmp开头的临时文件夹
+tmp*/
+
+# 忽略所有.idea文件夹
+.idea/
+
+# 忽略所有以~结尾的备份文件
+*~
+
+# 忽略所有以.swp结尾的Vim交换文件
+*.swp
+
+# 忽略所有以.class结尾的编译文件
+*.class
+
+# 忽略所有以.out结尾的输出文件
+*.out
+
+# 忽略所有以.cache文件夹
+.cache/
+
+# 忽略所有.env文件
+.env
