@@ -3,15 +3,16 @@ import matplotlib.pyplot as plt
 
 @dataclass
 class TrainingConfig:
+    dataset_name = "/home/dell-t3660tow/data/RL/RL_AUV_tracking/RL_AUV_tracking/log/sample/trajs_dam/"
     # train parameters
     train_batch_size = 16
     eval_batch_size = 8  # how many images to sample during evaluation
-    num_epochs = 50
+    num_epochs = 2
     gradient_accumulation_steps = 1
     learning_rate = 1e-4
     lr_warmup_steps = 500
-    save_image_epochs = 10
-    save_model_epochs = 30
+    save_image_epochs = 1
+    save_model_epochs = 1
     # distribution config
     mixed_precision = "fp16"  # `no` for float32, `fp16` for automatic mixed precision
     gpu_ids = None
@@ -28,7 +29,7 @@ config = TrainingConfig()
 import datasets
 from auv_track_launcher.dataset.holoocean_image_dataset import HoloOceanImageDataset
 
-config.dataset_name = "/home/dell-t3660tow/data/RL/RL_AUV_tracking/RL_AUV_tracking/log/sample/trajs_dam/"
+# config.dataset_name = "/home/dell-t3660tow/data/RL/RL_AUV_tracking/RL_AUV_tracking/log/sample/trajs_dam/"
 dataset_0 = datasets.load_from_disk(config.dataset_name+"traj_1")
 dataset_1 = datasets.load_from_disk(config.dataset_name+"traj_2")
 dataset_2 = datasets.load_from_disk(config.dataset_name+"traj_3")
@@ -209,14 +210,13 @@ def train_loop(config, model, noise_scheduler, optimizer, train_dataloader, lr_s
 
         # After each epoch you optionally sample some demo images with evaluate() and save the model
         if accelerator.is_main_process:
-            unet = accelerator.unwrap_model(model['model'])
-            pipeline = DDPMPipeline(unet=unet, scheduler=noise_scheduler)
-
+            unet = accelerator.unwrap_model(model)
+            ema_model.store(unet.parameters())
+            ema_model.copy_to(unet.parameters())
+            ema_model.restore(unet.parameters())
+            pipeline = DDPMPipeline(unet=unet["model"], scheduler=noise_scheduler)
             if (epoch + 1) % config.save_image_epochs == 0 or epoch == config.num_epochs - 1:
                 evaluate(config, epoch, pipeline)
-                ema_model.store(unet.parameters())
-                ema_model.copy_to(unet.parameters())
-                ema_model.restore(unet.parameters())
 
             if (epoch + 1) % config.save_model_epochs == 0 or epoch == config.num_epochs - 1:
                 if config.push_to_hub:
@@ -228,10 +228,7 @@ def train_loop(config, model, noise_scheduler, optimizer, train_dataloader, lr_s
                     )
                 else:
                     pipeline.save_pretrained(config.output_dir)
-                unet = accelerator.unwrap_model(model['model'])
-                ema_model.store(unet.parameters())
-                ema_model.copy_to(unet.parameters())
-                ema_model.restore(unet.parameters())
+                torch.save(unet.state_dict(), os.path.join(config.output_dir, "unet_ema"))
 
 
 from accelerate import notebook_launcher

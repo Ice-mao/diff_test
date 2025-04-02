@@ -80,12 +80,12 @@ class HoloOceanImageDataset(torch.utils.data.Dataset):
         # 随机数据增强 - 每次选择一种方法应用
         aug_choice = torch.rand(1).item()
         
-        # 1. 随机水平翻转 (20%概率)
-        if aug_choice < 0.1:
+        # 1. 随机水平翻转 (5%概率)
+        if aug_choice < 0.05:
             torch_data['obs'] = F.hflip(torch_data['obs'])
         
-        # 2. 随机平移 (20%概率)
-        elif aug_choice < 0.3:
+        # 2. 随机平移 (5%概率)
+        elif aug_choice < 0.1:
             # 随机生成平移量，最大为图像尺寸的10%
             max_dx = int(128 * 0.1)
             max_dy = int(128 * 0.1)
@@ -102,8 +102,8 @@ class HoloOceanImageDataset(torch.utils.data.Dataset):
                 interpolation=F.InterpolationMode.BILINEAR
             )
         
-        # 3. 随机旋转 (20%概率)
-        elif aug_choice < 0.5:
+        # 3. 随机旋转 (5%概率)
+        elif aug_choice < 0.15:
             # 随机旋转±15度
             angle = torch.FloatTensor(1).uniform_(-15, 15).item()
             torch_data['obs'] = F.rotate(
@@ -113,8 +113,8 @@ class HoloOceanImageDataset(torch.utils.data.Dataset):
                 fill=0  # 边缘填充黑色
             )
         
-        # 4. 随机亮度和对比度 (20%概率)
-        elif aug_choice < 0.7:
+        # 4. 随机亮度和对比度 (5%概率)
+        elif aug_choice < 0.2:
             # 亮度调整因子
             brightness_factor = torch.FloatTensor(1).uniform_(0.8, 1.2).item()
             torch_data['obs'] = F.adjust_brightness(torch_data['obs'], brightness_factor)
